@@ -30,7 +30,7 @@ router.post('/', validateNewProject, (req, res, next) => {
         .catch(next);
 })
 
-router.put('/:id', validateUpdateProject, (req, res, next) => {
+router.put('/:id', checkProjectId, validateUpdateProject, (req, res, next) => {
     Project.update(req.params.id, req.body)
         .then(project => {
             res.status(200).json(project);
