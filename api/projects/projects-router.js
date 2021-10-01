@@ -1,5 +1,5 @@
-// Write your "projects" router here!
 const express = require('express');
+const { checkProjectId, validateNewProject, validateUpdateProject } = require('./projects-middleware');
 const Project = require('./projects-model');
 const router = express.Router();
 
@@ -18,99 +18,40 @@ router.get('/', async (req, res) => {
     }
 })
 
-router.get('/:id', async (req, res) => {
-    try {
-        const project = await Project.get(req.params.id);
-        if (project) {
+router.get('/:id', checkProjectId, (req, res) => {
+    res.status(200).json(req.project);
+})
+
+router.post('/', validateNewProject, (req, res, next) => {
+    Project.insert(req.body)
+        .then(project => {
+            res.status(201).json(project);
+        })
+        .catch(next);
+})
+
+router.put('/:id', validateUpdateProject, (req, res, next) => {
+    Project.update(req.params.id, req.body)
+        .then(project => {
             res.status(200).json(project);
-        } else {
-            res.status(404).json({
-                message: `Project with id ${req.params.id} not found`
-            })
-        }
-    } catch (err) {
-        res.status(500).json({
-            err: err.message
         })
-    }
+        .catch(next);
 })
 
-router.post('/', async (req, res) => {
-    try {
-        const { name, description } = req.body;
-        if (!name || !description) {
-            res.status(400).json({
-                message: "Please provide name and description for the project"
-            })
-        } else {
-            const newProject = await Project.insert(req.body);
-            res.status(201).json(newProject);
-        }
-    } catch (err) {
-        res.status(500).json({
-            err: err.message
+router.delete('/:id', checkProjectId, async (req, res, next) => {
+    Project.remove(req.params.id)
+        .then(() => {
+            res.status(200).json({ message: 'The project has been removed' });
         })
-    }
+        .catch(next);
 })
 
-router.put('/:id', async (req, res) => {
-    try {
-        const projectMaybe = await Project.get(req.params.id)
-        if (!projectMaybe) {
-            res.status(404).json({
-                message: `Project with id ${req.params.id} not found`
-            })
-        } else {
-            if (!req.body.name || !req.body.description || req.body.completed === undefined) {
-                res.status(400).json({
-                    message: "The request body is missing the required fields"
-                })
-            } else {
-                const updatedProject = await Project.update(req.params.id, req.body);
-                res.status(200).json(updatedProject);
-            }
-        }
-    } catch (err) {
-        res.status(500).json({
-            err: err.message
+router.get('/:id/actions', checkProjectId, (req, res, next) => {
+    Project.getProjectActions(req.params.id)
+        .then(actions => {
+            res.status(200).json(actions);
         })
-    }
-})
-
-router.delete('/:id', async (req, res) => {
-    try {
-        const projectMaybe = await Project.get(req.params.id);
-        if (!projectMaybe) {
-            res.status(404).json({
-                message: `Project with id ${req.params.id} not found`
-            })
-        } else {
-            await Project.remove(req.params.id);
-            res.json(200)
-        }
-    } catch (err) {
-        res.status(500).json({
-            err: err.message
-        })
-    }
-})
-
-router.get('/:id/actions', async (req, res) => {
-    try {
-        const projectMaybe = await Project.get(req.params.id)
-        if (!projectMaybe) {
-            res.status(400).json({
-                message: `Project with id ${req.params.id} not found`
-            })
-        } else {
-            const actions = await Project.getProjectActions(req.params.id)
-            res.status(200).json(actions)
-        }
-    } catch (err) {
-        res.status(500).json({
-            message: "The actions information could not be retrieved"
-        })
-    }
+        .catch(next);
 })
 
 module.exports = router;
