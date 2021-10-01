@@ -35,4 +35,22 @@ router.get('/:id', async (req, res) => {
     }
 })
 
+router.post('/', async (req, res) => {
+    try {
+        const { name, description, completed } = req.body;
+        if (!name || !description) {
+            res.status(400).json({
+                message: "Please provide name and description for the project"
+            })
+        } else {
+            const newProject = await Project.insert(req.body);
+            res.status(201).json(newProject);
+        }
+    } catch (err) {
+        res.status(500).json({
+            err: err.message
+        })
+    }
+})
+
 module.exports = router;
