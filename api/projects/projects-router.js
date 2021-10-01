@@ -77,4 +77,22 @@ router.put('/:id', async (req, res) => {
     }
 })
 
+router.delete('/:id', async (req, res) => {
+    try {
+        const project = await Project.get(req.params.id);
+        if (!project) {
+            res.status(404).json({
+                message: `Project with id ${req.params.id} not found`
+            })
+        } else {
+            await Project.remove(req.params.id);
+            res.json(200)
+        }
+    } catch (err) {
+        res.status(500).json({
+            err: err.message
+        })
+    }
+})
+
 module.exports = router;
