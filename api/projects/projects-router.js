@@ -55,8 +55,8 @@ router.post('/', async (req, res) => {
 
 router.put('/:id', async (req, res) => {
     try {
-        const project = await Project.get(req.params.id)
-        if (!project) {
+        const projectMaybe = await Project.get(req.params.id)
+        if (!projectMaybe) {
             res.status(404).json({
                 message: `Project with id ${req.params.id} not found`
             })
@@ -79,8 +79,8 @@ router.put('/:id', async (req, res) => {
 
 router.delete('/:id', async (req, res) => {
     try {
-        const project = await Project.get(req.params.id);
-        if (!project) {
+        const projectMaybe = await Project.get(req.params.id);
+        if (!projectMaybe) {
             res.status(404).json({
                 message: `Project with id ${req.params.id} not found`
             })
@@ -91,6 +91,24 @@ router.delete('/:id', async (req, res) => {
     } catch (err) {
         res.status(500).json({
             err: err.message
+        })
+    }
+})
+
+router.get('/:id/actions', async (req, res) => {
+    try {
+        const projectMaybe = await Project.get(req.params.id)
+        if (!projectMaybe) {
+            res.status(400).json({
+                message: `Project with id ${req.params.id} not found`
+            })
+        } else {
+            const actions = await Project.getProjectActions(req.params.id)
+            res.status(200).json(actions)
+        }
+    } catch (err) {
+        res.status(500).json({
+            message: "The actions information could not be retrieved"
         })
     }
 })
